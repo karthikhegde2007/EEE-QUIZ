@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EEE Quiz – NMAM Institute of Technology</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#F5A623;--dark:#0A0E1A;--card:#111827;--border:#1E2A3A;
+  --green:#22C55E;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+  --text:#F1F5F9;--muted:#94A3B8;--surface:#1E293B;
+}
+body{font-family:'Outfit',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* BACKGROUNDS */
+.bg-circuit{position:fixed;inset:0;z-index:0;background:var(--dark);overflow:hidden}
+.bg-circuit::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 20%,rgba(139,92,246,0.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(59,130,246,0.1) 0%,transparent 60%)}
+.bg-circuit svg{position:absolute;inset:0;width:100%;height:100%;opacity:0.04}
+
+/* SCREENS */
+.screen{position:relative;z-index:1;display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+
+/* LANDING */
+#landing{background:none}
+.logo-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.3);border-radius:100px;padding:8px 16px;font-size:12px;font-weight:600;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:24px}
+.logo-badge span{font-size:16px}
+h1.hero{font-size:clamp(2rem,6vw,3.5rem);font-weight:800;line-height:1.1;text-align:center;margin-bottom:8px}
+h1.hero .accent{background:linear-gradient(135deg,#F5A623,#F97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:var(--muted);font-size:1rem;text-align:center;margin-bottom:36px;max-width:480px}
+
+.name-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:460px;margin-bottom:20px}
+.name-card label{display:block;font-size:13px;font-weight:600;color:var(--gold);letter-spacing:0.5px;margin-bottom:10px;text-transform:uppercase}
+.name-card input{width:100%;background:var(--dark);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:16px;color:var(--text);font-family:'Outfit',sans-serif;outline:none;transition:border-color 0.2s}
+.name-card input:focus{border-color:var(--gold)}
+.name-card input::placeholder{color:var(--muted)}
+
+.unit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.unit-btn{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:left;transition:all 0.2s;color:var(--text)}
+.unit-btn:hover{border-color:var(--gold);background:rgba(245,166,35,0.06)}
+.unit-btn .unit-label{font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.unit-btn .unit-name{font-size:13px;font-weight:500;margin-top:4px;color:var(--text)}
+.unit-btn .unit-count{font-size:11px;color:var(--muted);margin-top:2px}
+.unit-btn.selected{border-color:var(--gold);background:rgba(245,166,35,0.1)}
+
+.btn-start{width:100%;max-width:460px;padding:18px;background:linear-gradient(135deg,#F5A623,#F97316);border:none;border-radius:14px;font-size:16px;font-weight:700;color:#0A0E1A;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.2s;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,166,35,0.35)}
+.btn-start:active{transform:translateY(0)}
+
+/* QUIZ SCREEN */
+#quiz{padding:0;justify-content:flex-start}
+.quiz-header{position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);width:100%;padding:12px 16px}
+.quiz-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.quiz-user{font-size:13px;color:var(--muted);font-weight:500}
+.quiz-user span{color:var(--gold);font-weight:600}
+.timer-pill{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:6px 14px;font-size:14px;font-weight:700;color:var(--text);font-family:'Space Grotesk',sans-serif}
+.timer-pill.warning{color:var(--red);border-color:rgba(239,68,68,0.4)}
+.timer-dot{width:6px;height:6px;background:var(--green);border-radius:50%}
+.timer-pill.warning .timer-dot{background:var(--red)}
+
+.progress-info{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+.progress-bar{width:100%;height:4px;background:var(--border);border-radius:100px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#F5A623,#F97316);border-radius:100px;transition:width 0.4s ease}
+
+.quiz-body{width:100%;max-width:580px;margin:0 auto;padding:20px 16px 100px}
+.unit-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:100px;padding:4px 12px;font-size:11px;font-weight:600;color:#A78BFA;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:16px}
+
+.q-number{font-size:13px;color:var(--muted);margin-bottom:8px;font-weight:500}
+.q-text{font-size:1.05rem;font-weight:500;line-height:1.6;margin-bottom:24px;color:var(--text)}
+
+.options{display:flex;flex-direction:column;gap:10px}
+.option{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.18s;color:var(--text);font-size:0.95rem;line-height:1.5;font-family:'Outfit',sans-serif;text-align:left;width:100%}
+.option:hover:not(:disabled){border-color:#4B5563;background:var(--surface)}
+.option .opt-letter{width:28px;height:28px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;font-family:'Space Grotesk',sans-serif;color:var(--muted)}
+.option.correct{border-color:var(--green);background:rgba(34,197,94,0.08)}
+.option.correct .opt-letter{background:var(--green);border-color:var(--green);color:#fff}
+.option.wrong{border-color:var(--red);background:rgba(239,68,68,0.08)}
+.option.wrong .opt-letter{background:var(--red);border-color:var(--red);color:#fff}
+.option.disabled{cursor:default}
+.option.correct .opt-text,.option.wrong .opt-text{font-weight:500}
+
+.feedback-msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;display:none;align-items:center;gap:8px}
+.feedback-msg.show{display:flex}
+.feedback-msg.correct{background:rgba(34,197,94,0.12);color:#4ADE80;border:1px solid rgba(34,197,94,0.25)}
+.feedback-msg.wrong{background:rgba(239,68,68,0.12);color:#F87171;border:1px solid rgba(239,68,68,0.25)}
+
+.quiz-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(10,14,26,0.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:12px 16px}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;max-width:580px;margin:0 auto;gap:10px}
+.btn-nav{padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;border:none;transition:all 0.2s}
+.btn-prev{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.btn-prev:hover{border-color:#4B5563}
+.btn-next{background:linear-gradient(135deg,#F5A623,#F97316);color:#0A0E1A;flex:1}
+.btn-next:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,166,35,0.3)}
+.btn-submit-quiz{background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;flex:1}
+.btn-submit-quiz:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(139,92,246,0.3)}
+
+/* RESULTS */
+#results{padding:20px}
+.results-card{background:var(--card);border:1px solid var(--border);border-radius:24px;width:100%;max-width:520px;overflow:hidden}
+.results-header{padding:32px;text-align:center;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(245,166,35,0.08),rgba(139,92,246,0.06))}
+.score-ring{width:120px;height:120px;margin:0 auto 16px;position:relative}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring .score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif}
+.score-ring .score-pct{font-size:28px;font-weight:700}
+.score-ring .score-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.results-name{font-size:1.2rem;font-weight:700;margin-bottom:4px}
+.results-unit{font-size:13px;color:var(--gold);margin-bottom:8px}
+.grade-badge{display:inline-block;padding:6px 18px;border-radius:100px;font-size:13px;font-weight:700;margin-top:8px}
+.grade-A{background:rgba(34,197,94,0.15);color:#4ADE80;border:1px solid rgba(34,197,94,0.3)}
+.grade-B{background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.3)}
+.grade-C{background:rgba(245,166,35,0.15);color:#FBBF24;border:1px solid rgba(245,166,35,0.3)}
+.grade-D{background:rgba(239,68,68,0.15);color:#F87171;border:1px solid rgba(239,68,68,0.3)}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--border)}
+.stat-box{padding:16px;text-align:center;border-right:1px solid var(--border)}
+.stat-box:last-child{border-right:none}
+.stat-val{font-size:1.6rem;font-weight:800;font-family:'Space Grotesk',sans-serif}
+.stat-val.green{color:var(--green)}
+.stat-val.red{color:var(--red)}
+.stat-val.blue{color:var(--blue)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+.results-actions{padding:16px;display:flex;flex-direction:column;gap:10px}
+.btn-review{width:100%;padding:14px;border-radius:12px;border:1.5px solid var(--gold);background:transparent;color:var(--gold);font-size:15px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.2s}
+.btn-review:hover{background:rgba(245,166,35,0.08)}
+.btn-retake{width:100%;padding:14px;border-radius:12px;border:none;background:var(--surface);color:var(--text);font-size:15px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.2s}
+.btn-retake:hover{background:#253044}
+.btn-home{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#F5A623,#F97316);color:#0A0E1A;font-size:15px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.2s}
+.btn-home:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,166,35,0.3)}
+
+/* REVIEW */
+#review{padding:20px;justify-content:flex-start;align-items:stretch}
+.review-header{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+.review-header h2{font-size:1rem;font-weight:700;flex:1}
+.btn-back{padding:8px 16px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif}
+.review-list{max-width:580px;margin:0 auto;width:100%}
+.review-item{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid var(--border)}
+.review-item.r-correct{border-color:rgba(34,197,94,0.35)}
+.review-item.r-wrong{border-color:rgba(239,68,68,0.35)}
+.review-item.r-skip{border-color:rgba(148,163,184,0.3)}
+.review-qnum{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.review-qtxt{font-size:14px;font-weight:500;margin-bottom:12px;line-height:1.5}
+.review-opts{display:flex;flex-direction:column;gap:6px}
+.review-opt{padding:8px 12px;border-radius:8px;font-size:13px;border:1px solid transparent;display:flex;align-items:center;gap:8px}
+.review-opt.r-correct-opt{background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#4ADE80}
+.review-opt.r-wrong-opt{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#F87171}
+.review-opt .r-tick{font-size:14px}
+.review-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;margin-bottom:8px}
+.rs-correct{background:rgba(34,197,94,0.15);color:#4ADE80}
+.rs-wrong{background:rgba(239,68,68,0.15);color:#F87171}
+.rs-skip{background:rgba(148,163,184,0.15);color:var(--muted)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp 0.35s ease forwards}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.pulse{animation:pulse 1s infinite}
+</style>
+</head>
+<body>
+
+<div class="bg-circuit">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+<defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0L0 0 0 40" fill="none" stroke="#fff" stroke-width="0.5"/></pattern></defs>
+<rect width="800" height="600" fill="url(#grid)"/>
+<circle cx="80" cy="80" r="4" fill="#F5A623"/><circle cx="200" cy="120" r="4" fill="#8B5CF6"/><circle cx="400" cy="60" r="4" fill="#3B82F6"/>
+<circle cx="600" cy="100" r="4" fill="#F5A623"/><circle cx="720" cy="200" r="4" fill="#8B5CF6"/>
+<line x1="80" y1="80" x2="200" y2="120" stroke="#F5A623" stroke-width="0.8"/>
+<line x1="200" y1="120" x2="400" y2="60" stroke="#8B5CF6" stroke-width="0.8"/>
+<line x1="400" y1="60" x2="600" y2="100" stroke="#3B82F6" stroke-width="0.8"/>
+<line x1="600" y1="100" x2="720" y2="200" stroke="#F5A623" stroke-width="0.8"/>
+<circle cx="160" cy="400" r="4" fill="#22C55E"/><circle cx="320" cy="350" r="4" fill="#F5A623"/>
+<circle cx="480" cy="420" r="4" fill="#8B5CF6"/><circle cx="640" cy="380" r="4" fill="#3B82F6"/>
+<line x1="160" y1="400" x2="320" y2="350" stroke="#22C55E" stroke-width="0.8"/>
+<line x1="320" y1="350" x2="480" y2="420" stroke="#F5A623" stroke-width="0.8"/>
+<line x1="480" y1="420" x2="640" y2="380" stroke="#8B5CF6" stroke-width="0.8"/>
+</svg>
+</div>
+
+<!-- LANDING SCREEN -->
+<div id="landing" class="screen active">
+  <div class="logo-badge"><span>⚡</span>NMAM Institute of Technology</div>
+  <h1 class="hero">EEE <span class="accent">MCQ Quiz</span></h1>
+  <p class="subtitle">Department of Electrical & Electronics Engineering · Unit-wise Assessment</p>
+
+  <div class="name-card fade-up">
+    <label>Your Name</label>
+    <input type="text" id="studentName" placeholder="Enter your full name to begin..." autocomplete="off" />
+
+    <div style="margin-top:20px">
+      <label style="display:block;font-size:13px;font-weight:600;color:#A78BFA;letter-spacing:0.5px;margin-bottom:12px;text-transform:uppercase">Select Unit</label>
+      <div class="unit-grid" id="unitGrid"></div>
+    </div>
+  </div>
+
+  <button class="btn-start" onclick="startQuiz()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg>
+    Start Quiz
+  </button>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <div class="quiz-header-top">
+      <div class="quiz-user">👤 <span id="displayName">Student</span></div>
+      <div class="timer-pill" id="timerPill">
+        <div class="timer-dot"></div>
+        <span id="timerDisplay">30:00</span>
+      </div>
+    </div>
+    <div class="progress-info">
+      <span id="progressLabel">Question 1 of 29</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="quiz-body">
+    <div class="unit-tag" id="qUnitTag">⚡ Unit 1</div>
+    <div class="q-number" id="qNum">Question 1</div>
+    <div class="q-text" id="qText"></div>
+    <div class="options" id="optionsContainer"></div>
+    <div class="feedback-msg" id="feedbackMsg"></div>
+  </div>
+
+  <div class="quiz-nav">
+    <div class="nav-inner">
+      <button class="btn-nav btn-prev" onclick="prevQuestion()">← Prev</button>
+      <button class="btn-nav btn-next" id="btnNext" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="results" class="screen">
+  <div class="results-card fade-up">
+    <div class="results-header">
+      <div class="score-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#1E293B" stroke-width="10"/>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="url(#scoreGrad)" stroke-width="10" stroke-linecap="round" id="scoreArc" stroke-dasharray="314" stroke-dashoffset="314"/>
+          <defs><linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F5A623"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+        </svg>
+        <div class="score-num">
+          <div class="score-pct" id="scorePct">0%</div>
+          <div class="score-lbl">Score</div>
+        </div>
+      </div>
+      <div class="results-name" id="resultsName">Student</div>
+      <div class="results-unit" id="resultsUnit">Unit 1</div>
+      <div class="grade-badge" id="gradeBadge">Grade A</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-val green" id="statCorrect">0</div>
+        <div class="stat-label">Correct</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val red" id="statWrong">0</div>
+        <div class="stat-label">Wrong</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val blue" id="statSkipped">0</div>
+        <div class="stat-label">Skipped</div>
+      </div>
+    </div>
+
+    <div class="results-actions">
+      <button class="btn-review" onclick="showReview()">📋 Review All Questions</button>
+      <button class="btn-retake" onclick="retakeQuiz()">↺ Retake This Unit</button>
+      <button class="btn-home" onclick="goHome()">⚡ Choose Another Unit</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW SCREEN -->
+<div id="review" class="screen" style="align-items:stretch;justify-content:flex-start">
+  <div style="max-width:580px;margin:0 auto;width:100%;padding:16px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;position:sticky;top:0;z-index:50;background:var(--dark);padding:8px 0">
+      <button class="btn-back" onclick="showResults()">← Back</button>
+      <h2 style="font-size:1rem;font-weight:700;flex:1">Review Questions</h2>
+      <div style="font-size:12px;color:var(--muted)" id="reviewMeta"></div>
+    </div>
+    <div id="reviewList"></div>
+  </div>
+</div>
+
+<script>
+const UNITS = [
+  {id:1,name:"Circuit Fundamentals",desc:"Ohm's Law, KVL, KCL, Graph Theory, Mesh & Nodal Analysis"},
+  {id:2,name:"AC Circuits",desc:"RMS, Phasors, Power, Resonance"},
+  {id:3,name:"Power Systems & Machines",desc:"Energy Sources, Transformers, Motors, EVs"},
+  {id:4,name:"Power Electronics & EVs",desc:"Buck/Boost, UPS, EV Systems, Motors"},
+  {id:5,name:"Magnetic Circuits & Machines",desc:"Transformers, DC Motors, Stepper, Protection"}
+];
+
+const ALL_QUESTIONS = {
+  1:[
+    {q:"Which of the following elements of electrical engineering cannot be analyzed using Ohm's law?",opts:["Capacitors","Inductors","Transistors","Resistance"],ans:2},
+    {q:"Which of the following according to KVL must be zero?",opts:["Algebraic sum of currents in closed-loop","Algebraic sum of power in closed-loop","Algebraic sum of losses in closed-loop","Algebraic sum of voltages in closed-loop"],ans:3},
+    {q:"Kirchhoff's Law is applicable to",opts:["Passive network only","A.C. Network only","D.C. network only","Both A.C and D.C circuits"],ans:3},
+    {q:"KCL works on the principle of which of the following",opts:["Law of conservation of charge","Law of conservation of energy","Both","None of the above"],ans:0},
+    {q:"KVL works on the principle of",opts:["Law of conservation of charge","Law of conservation of energy","Both","None of the above"],ans:1},
+    {q:"Potential difference between two points of a wire carrying 2A current is 0.1V. The resistance of the wire is",opts:["0.5 ohm","0.05 ohm","0.25 ohm","5 ohm"],ans:1},
+    {q:"Which of the following statements are true? Statement 1: A tree is a graph but a graph is not a tree. Statement 2: Both trees and graphs are non linear data structures.",opts:["Only statement 1 is true","Only statement 2 is true","Both statement 1 and statement 2 are true","None of them is true"],ans:2},
+    {q:"The number of links for a graph having 'n' nodes and 'b' branches are",opts:["b-n+1","n-b+1","b+n-1","b+n"],ans:0},
+    {q:"The tree branches of a graph are called",opts:["Chords","Links","Twigs","Co-tree"],ans:2},
+    {q:"The tie-set matrix gives the relation between",opts:["Branch currents and link currents","Branch voltages and link currents","Branch currents and link voltages","None of these"],ans:0},
+    {q:"Which one of the following statements is correct: A tree in a network is a connected graph containing",opts:["All the nodes only","All the branches only","All the branches and nodes","All the nodes but no close path"],ans:3},
+    {q:"The number of chords in the graph of the given circuit will be",opts:["2","4","5","6"],ans:0},
+    {q:"Consider the network graph shown in Figure, which one of the following is not a tree of this graph.",opts:["Option a","Option b","Option c","Option d"],ans:1},
+    {q:"What is a 'branch' in the context of a network's graph representation?",opts:["The complete circuit diagram","A single closed loop","A line segment connecting two nodes, representing a circuit element","A matrix that defines the network"],ans:2},
+    {q:"In an incidence matrix, what does the rows and columns typically represent?",opts:["Rows represent branches; columns represent nodes","Rows represent loops; columns represent nodes","Rows represent nodes; columns represent branches","Rows represent loops; columns represent branches"],ans:2},
+    {q:"A graph without any cycles or closed loops is called as",opts:["Complete graph","Directed graph","Planar graph","Tree"],ans:3},
+    {q:"In a complete incidence matrix, the algebraic sum of the entries in any column is",opts:["0","1","-1","2"],ans:0},
+    {q:"A reduced incidence matrix is formed by removing one row from the complete incidence matrix. This removed row corresponds to the:",opts:["Reference node","Loop branch","Independent loop","Cut-set"],ans:0},
+    {q:"The rows of a tie-set matrix represent",opts:["Node voltages","Branch currents","Tie-set currents (or link currents)","Branch voltages"],ans:2},
+    {q:"For a connected graph with 'n' nodes, the number of independent cut-sets is",opts:["n-1","n-b+1","b+n-1","b+n"],ans:0},
+    {q:"Which of the following is a valid assumption in mesh analysis with only independent sources?",opts:["Each node has the same voltage","Each mesh must contain a voltage source","Mesh currents can be assumed clockwise or counterclockwise","Only KCL is needed"],ans:2},
+    {q:"In a DC circuit with only independent voltage sources and resistors, mesh analysis applies KVL around each loop. What is the correct KVL form?",opts:["Sum of voltage drops across resistance and emf = zero","Sum of currents at a junction = zero","Sum of voltage drops across resistance = zero","Current entering a node = current leaving"],ans:0},
+    {q:"In nodal analysis of a circuit with only independent current sources & resistors, which of the following is correct?",opts:["Current source is replaced with voltage","Nodal voltages are solved using KCL","Supernode is mandatory","Voltage drops are summed in loops"],ans:1},
+    {q:"A planar circuit has 4 meshes and contains only resistors and independent voltage sources. How many mesh equations are needed?",opts:["1","3","4","5"],ans:2},
+    {q:"In a circuit with 3 meshes and 2 independent voltage sources, the number of mesh current equations is:",opts:["1","2","3","5"],ans:2},
+    {q:"In a mesh with a voltage source of 12 V and resistors of 4 Ω and 2 Ω, what is the mesh current assuming clockwise direction?",opts:["2 A","3 A","4 A","6 A"],ans:0},
+    {q:"Which of the following is not an expression of power?",opts:["P=VI","P=I²R","P=V²/R","P=I/R"],ans:3},
+    {q:"Number of twigs in a graph is calculated by",opts:["n-1","n-b+1","b+n-1","b+n"],ans:0},
+    {q:"If a circuit has 'N' nodes, the number of independent node equations needed in nodal analysis is:",opts:["N","N-1","N+1","N-2"],ans:1}
+  ],
+  2:[
+    {q:"RMS value is defined based on which of the following",opts:["Heating effect","Charge transfer","Current","Voltage"],ans:0},
+    {q:"Which of the following defines the average value",opts:["Voltage","Heating effect","Current","Charge transfer"],ans:3},
+    {q:"For symmetrical waveform average value of one full cycle is",opts:["1","1.11","2.22","0"],ans:3},
+    {q:"Inductor does not allow the sudden change of",opts:["Current","Voltage","Power","None of the above"],ans:0},
+    {q:"Capacitor does not allow the sudden change of",opts:["Current","Voltage","Power","None of the above"],ans:1},
+    {q:"If a pure inductor is connected across the ac source, the average power taken by the inductor is",opts:["A few watt","100 watt","Zero watt","Maximum power"],ans:2},
+    {q:"Average power taken by the pure capacitor is",opts:["Zero","Minimum","Maximum","Any of the above"],ans:0},
+    {q:"In a series R, L circuit, voltage across resistor and inductor are 3 V and 4 V respectively, then what is the applied voltage",opts:["7V","5V","4V","3V"],ans:1},
+    {q:"The alternative names for active power is/are",opts:["Real power","Average power","True power","All of the above"],ans:3},
+    {q:"In series R, L circuit power factor can be defined as",opts:["R/Z","P/S","Vr/V","All of the above"],ans:3},
+    {q:"In ac RC series circuit total voltage is 10V and voltage across resistor is 6V, then what is voltage across capacitor",opts:["4V","8V","16V","10V"],ans:1},
+    {q:"In series RLC circuit, voltage across resistor, inductor and capacitor are 5V, 2V and 2V respectively. Find total voltage",opts:["9V","4V","2V","5V"],ans:3},
+    {q:"In RLC series circuit, if the voltage across the capacitor is greater than the voltage across inductor, then power factor of the network is",opts:["Lagging","Leading","Unity","Zero"],ans:1},
+    {q:"An inductor works by",opts:["Charging a piece of wire","Storing Energy as a magnetic field","Choking off DC","Introducing Resistance into the field"],ans:1},
+    {q:"The form factor is the ratio of",opts:["Peak value to r.m.s. value","r.m.s. value to average value","Average value to r.m.s. value","None of the above"],ans:1},
+    {q:"Which of the following circuit components opposes the change in the circuit voltage",opts:["Inductance","Capacitance","Conductance","Resistance"],ans:1},
+    {q:"For sine wave the value of form factor is",opts:["1","1.11","0","1.414"],ans:1},
+    {q:"For sine wave the value of peak factor is",opts:["1","1.11","0","1.414"],ans:3},
+    {q:"When a pure resistive circuit is energized by an AC supply, the angle between the voltage and its current is",opts:["90°","0°","In between 0° and 90°","None of these"],ans:1},
+    {q:"Power factor of a pure resistive circuit is",opts:["1","0","in between 0 and 1","more than 1"],ans:0},
+    {q:"In a pure inductive circuit, the ratio of voltage to current (V/I) is referred to as",opts:["Resistance","Admittance","Inductive Reactance","None of these"],ans:2},
+    {q:"Power factor of a pure inductive circuit is",opts:["1","0","in between 0 and 1","more than 1"],ans:1},
+    {q:"The Inductive reactance is measured in",opts:["henry","farad","ohm","none of these"],ans:2},
+    {q:"Power factor of a pure capacitive circuit is",opts:["1","0","in between 0 and 1","more than 1"],ans:1},
+    {q:"In a pure capacitive circuit, the ratio of voltage to current (V/I) is referred to as",opts:["Resistance","Admittance","Capacitive Reactance","None of these"],ans:2},
+    {q:"The voltage induced in an inductor is represented as",opts:["Product of its inductance and current through it","Ratio of its inductance to current through it","Ratio of current through it to its inductance","Product of its inductance and rate of change of current through it"],ans:3},
+    {q:"Power factor of a pure capacitive circuit is",opts:["0","1","in between 0 and 1","more than 1"],ans:0},
+    {q:"Kirchhoff's laws are useful in determining",opts:["Current flowing in a circuit","EMFs and Voltage drops in a circuit","Power in a circuit","All the above"],ans:3},
+    {q:"In a pure capacitive circuit, the ratio of voltage to current (V/I) is referred to as",opts:["Resistance","Admittance","Capacitive Reactance","None of these"],ans:2},
+    {q:"SI unit of power is",opts:["ampere","watt","kilowatt-hour","volt"],ans:1},
+    {q:"Power factor of a pure resistive circuit is",opts:["1","0","in between 0 and 1","more than 1"],ans:0},
+    {q:"The power consumed by a pure resistor is",opts:["Reactive Power","Active Power","Apparent Power","None of these"],ans:1},
+    {q:"Resistance/Impedance is equal to",opts:["Form factor","Peak factor","Power factor","None of these"],ans:2},
+    {q:"In a pure inductive circuit, the ratio of voltage to current (V/I) is referred to as",opts:["Resistance","Admittance","Inductive Reactance","None of these"],ans:2},
+    {q:"The Inductive reactance is measured in",opts:["henry","farad","ohm","None of these"],ans:2},
+    {q:"When a pure resistive circuit is energized by an AC supply, the angle between the voltage and its current is",opts:["90°","0°","In between 0 and 90°","None of these"],ans:1},
+    {q:"Peak factor of a sinusoidal current is",opts:["0.707","1.414","1.11","None of these"],ans:1},
+    {q:"The power factor of an AC circuit is given by",opts:["Cosine of the phase angle","Tangent of the phase angle","The ratio of R/XL","The ratio of XL/Z"],ans:0},
+    {q:"Average value of fully rectified sine wave is",opts:["0","0.637 times of its maximum value","0.318 times of its maximum value","0.5 times of its maximum value"],ans:1},
+    {q:"Average value of half rectified sine wave is",opts:["0","0.637 times of its maximum value","0.318 times of its maximum value","0.5 times of its maximum value"],ans:2}
+  ],
+  3:[
+    {q:"Which of the following is a non-conventional energy source?",opts:["Coal","Natural Gas","Solar Energy","Hydroelectric Power"],ans:2},
+    {q:"Which voltage level is commonly used for single-phase residential supply in India?",opts:["415 V","230 V","11 kV","132 kV"],ans:1},
+    {q:"The device which converts solar energy directly into electricity is",opts:["Solar heater","Photovoltaic cell","Solar concentrator","Solar chimney"],ans:1},
+    {q:"What voltage level is considered as extra high voltage in transmission systems?",opts:["33 kV – 66 kV","66 kV – 132 kV","220 kV – 400 kV","Above 400 kV"],ans:3},
+    {q:"In a thermal power plant, the primary energy conversion is from:",opts:["Mechanical to electrical","Chemical to thermal to electrical","Nuclear to thermal to electrical","Kinetic to electrical"],ans:1},
+    {q:"In a thermal power plant, the boiler converts",opts:["Electrical energy to thermal energy","Thermal energy to mechanical energy","Chemical energy to thermal energy","Mechanical energy to electrical energy"],ans:2},
+    {q:"In a nuclear power plant, the main function of the moderator is to",opts:["Absorb neutrons","Slow down fast neutrons","Cool the reactor","Increase neutron speed"],ans:1},
+    {q:"The main disadvantage of wind energy is",opts:["High operating cost","Pollution","Intermittent and unpredictable availability","Complex generator design"],ans:2},
+    {q:"What is the function of a generator in a power plant?",opts:["To step up the voltage for transmission","To convert mechanical energy into electrical energy","To burn fuel and produce heat","To cool down the steam from the turbine"],ans:1},
+    {q:"In a hydroelectric power plant, the potential energy of water is first converted into",opts:["Heat energy","Kinetic energy","Chemical energy","electrical energy directly"],ans:1},
+    {q:"The voltage generated at most power plants is relatively low and is stepped up using which of the following devices for efficient transmission?",opts:["Capacitor","Generator","Transformer","Turbine"],ans:2},
+    {q:"What is a key advantage of HVAC transmission over HVDC?",opts:["Lower power loss","Terminal equipment is less expensive","It can be used for interconnecting different frequency systems","No reactive power is consumed"],ans:1},
+    {q:"The secondary distribution system is primarily responsible for supplying electricity to:",opts:["Large industrial consumers","The main grid substation","Small industrial, commercial, and residential consumers","Other distribution substations"],ans:2},
+    {q:"HVAC transmission systems typically use how many conductors?",opts:["One","Two","Three","Four"],ans:2},
+    {q:"Which of these is NOT a basic component of a thermal power plant?",opts:["Boiler","Turbine","Cooling tower","Control room"],ans:3},
+    {q:"The voltage range for Low Voltage (LV) is typically considered to be",opts:["Below 1000 V","1 kV to 100 kV","Above 100 kV","Greater than 765 kV"],ans:0},
+    {q:"The primary purpose of the step-up transformer in a power plant is to:",opts:["Increase the voltage for transmission","Decrease the voltage for distribution","Generate electricity","Condense steam back into water"],ans:0},
+    {q:"The process of stepping down the voltage from 11 kV to 415 V is carried out by what component?",opts:["Step-up transformer","Distribution transformer","Voltage regulator","Isolator"],ans:1},
+    {q:"Which type of load is typically supplied by a 415 V, three-phase power system?",opts:["Domestic lighting","Small industrial and commercial loads","Residential appliances","Streetlights"],ans:1},
+    {q:"What does SMPS stand for?",opts:["Switched Mode Power System","Switched Mode Power Supply","Smart Mode Power Solution","Simple Mode Power Source"],ans:1},
+    {q:"What is the primary function of an SMPS?",opts:["To convert AC to DC power","To convert DC to AC power","To regulate power supply","To generate power"],ans:0},
+    {q:"What does PMSM stand for?",opts:["Permanent Magnet Synchronous Motor","Permanent Magnet Stepper Motor","Pulse Width Modulation Switching Motor","Power Management Switching Module"],ans:0},
+    {q:"What is a significant cost factor that makes EVs more economical in the long run?",opts:["Higher battery replacement costs","Lower operating costs (fuel and maintenance)","Higher insurance costs","Lower resale value"],ans:1},
+    {q:"What is the primary characteristic of a PMSM?",opts:["Uses electromagnetic induction","Has a permanent magnet rotor","Requires a commutator","Uses a brushed motor design"],ans:1},
+    {q:"What is the advantage of PMSM over induction motors?",opts:["Higher efficiency","Lower cost","Simpler design","Larger size"],ans:0},
+    {q:"What is the typical application of PMSM?",opts:["Household appliances","Industrial power systems","Electric vehicles and robotics","Aerospace and defense"],ans:2},
+    {q:"What is the key benefit of PMSM in electric vehicles?",opts:["Higher torque density","Lower noise emission","Improved fuel efficiency","Reduced maintenance"],ans:0},
+    {q:"Two main parts of a PMSM are:",opts:["Field, Armature","Stator, Armature","Stator, Rotor","Field, Rotor"],ans:2},
+    {q:"Two types of BLDC motors are:",opts:["Slip ring BLDC Motor, Squirrel cage BLDC Motor","Series BLDC Motor, Shunt BLDC Motor","Unipolar BLDC Motor, Bipolar BLDC Motor","Short shunt BLDC Motor, Long shunt BLDC Motor"],ans:2},
+    {q:"Boost converter is a ___________ converter",opts:["Step down - Step up","Step down","Step Up - Step down","Step up"],ans:3},
+    {q:"Boost converter uses ___________",opts:["An inductor & a diode only","A capacitor & a diode only","An inductor, a capacitor & a diode","An inductor & a capacitor only"],ans:2},
+    {q:"In a boost converter, output voltage is",opts:["Input Voltage / (1-D)","D x Input Voltage","(1-D) / Input Voltage","(1-D) x Input Voltage"],ans:0},
+    {q:"Buck converter is also called as",opts:["Step up converter","Step down converter","Step Up - Step down converter","Step down - step up converter"],ans:1},
+    {q:"Output voltage of a step down converter is",opts:["Input Voltage / D","(1-D) x Input Voltage","D x Input Voltage","Input Voltage / (1-D)"],ans:2},
+    {q:"Which component is the primary source of energy storage in an electric vehicle",opts:["Electric Motor","Battery Pack","Power Electronics Controller","Charging Port"],ans:1},
+    {q:"The component responsible for converting the DC power from the battery to AC power for the electric motor is the:",opts:["Onboard Charger","DC-DC Converter","Power Electronics Controller (Inverter)","Thermal System"],ans:2},
+    {q:"What is the primary function of the electric motor in an EV?",opts:["To store electrical energy","To convert electrical energy into mechanical energy to propel the vehicle","To convert AC power from the grid to DC power for the battery","To manage the temperature of the battery pack"],ans:1},
+    {q:"Which component allows an EV to capture and store energy that is normally lost during braking?",opts:["Regenerative Braking System","DC-DC Converter","Power Electronics Controller","Thermal System"],ans:0},
+    {q:"What is the role of the charging port?",opts:["To store energy for the vehicle","To provide power to the electric motor","To connect the vehicle to an external power source for recharging the battery","To convert AC to DC power for the battery"],ans:2},
+    {q:"What component in a BLDC motor replaces the mechanical commutator and brushes found in a conventional DC motor?",opts:["A flywheel","An electronic controller","A gearbox","A universal joint"],ans:1},
+    {q:"A Permanent Magnet Synchronous Motor (PMSM) is analogous in construction to a:",opts:["Induction motor","Conventional brushed DC motor","Switched reluctance motor","Brushless DC (BLDC) motor"],ans:3},
+    {q:"Which motor type is typically the most expensive due to the use of rare-earth magnets?",opts:["Switched Reluctance Motor (SRM)","Induction Motor (IM)","Permanent Magnet Synchronous Motor (PMSM)","DC Series Motor"],ans:2},
+    {q:"Faraday's First Law states:",opts:["The changing magnetic field linked with a conductor induces an electromotive force in the conductor","The induced emf is inversely proportional to the rate of change of magnetic flux linkage","The induced emf is directly proportional to the magnetic flux linkage","The induced emf is inversely proportional to the magnetic flux linkage"],ans:0},
+    {q:"Faraday's Second Law states:",opts:["The magnitude of induced emf in a closed circuit is directly proportional to the rate of change of magnetic flux linked with the circuit","The direction of the induced emf is such that it aids the change that produced it","The magnitude of the induced emf is independent of the change that produced it","The direction of the induced emf is always clockwise"],ans:0},
+    {q:"Self-induced emf is produced when:",opts:["The current in a coil changes","The current in a nearby coil changes","A magnet moves near a coil","A coil moves in a magnetic field"],ans:0},
+    {q:"Mutually induced emf is produced when:",opts:["The current in a coil changes","The current in a nearby coil changes","A magnet moves near a coil","A coil moves in a magnetic field"],ans:1},
+    {q:"The following are the parts of a DC motor are:",opts:["Stator, rotor, commutator, brushes","Stator, rotor, slip rings, brushes","Stator, rotor, commutator, slip rings","Stator, rotor, slip rings, commutator"],ans:0},
+    {q:"The principle of operation of a DC motor is based on:",opts:["Faraday's Law of Electromagnetic Induction","Lenz's Law","Ohm's Law","Kirchhoff's Law"],ans:0},
+    {q:"Which of the following is NOT a type of DC motor?",opts:["Shunt motor","Series motor","Compound motor","Synchronous motor"],ans:3},
+    {q:"Transformers are used to:",opts:["Change the voltage level of AC power","Change the frequency of AC power","Convert AC power to DC power","Convert DC power to AC power"],ans:0},
+    {q:"The main advantage of using transformers in power transmission is:",opts:["Reduced power losses","Increased power transmission efficiency","Ability to transmit power over long distances","All of the above"],ans:3},
+    {q:"Which of the following is NOT a type of transformer?",opts:["Step-up transformer","Step-down transformer","Autotransformer","DC transformer"],ans:3},
+    {q:"A transformer has 500 turns in the primary winding and 100 turns in the secondary winding. If the primary voltage is 220V, the secondary voltage will be:",opts:["44V","1100V","110V","22V"],ans:0},
+    {q:"What is the fundamental principle behind a stepper motor's operation?",opts:["Induction through AC current","Electromagnetic attraction/repulsion causing discrete steps","Faraday's law of induction","Friction between rotor and stator"],ans:1},
+    {q:"What does MCB stand for?",opts:["Miniature Circuit Breaker","Main Control Board","Motor Control Box","Maximum Current Breaker"],ans:0},
+    {q:"What is the primary function of an MCB?",opts:["To supply power to a circuit","To control the speed of a motor","To protect a circuit from overcurrent","To regulate voltage levels"],ans:2},
+    {q:"Which of the following is a benefit of a proper earthing system?",opts:["Reduced risk of fire","Improved system efficiency","Protection of personnel from electric shock","Increased system capacity"],ans:2},
+    {q:"What happens when a leakage current flows to ground through an earthing system?",opts:["The circuit breaker trips","The fuse blows","The voltage is reduced","The current is safely dissipated"],ans:3},
+    {q:"A fuse is a:",opts:["One-time use device that needs replacement after blowing","Resettable device like a circuit breaker","Mechanical switching device","Device that only works on high voltage"],ans:0},
+    {q:"For plate earthing using a copper plate, the size of the plate should not be less than:",opts:["60 cm x 60 cm x 6.35 mm","60 cm x 60 cm x 3.18 mm","30 cm x 30 cm x 3.18 mm","60 mm x 60 mm x 3.18 mm"],ans:1},
+    {q:"If a transformer has a turns ratio of 2:1, it means:",opts:["It is a step up transformer","Voltage on secondary is double","Voltage on primary is double","Transformer is faulty"],ans:2}
+  ],
+  4:[
+    {q:"What is the primary function of a buck converter?",opts:["Step up DC voltage","Convert AC to DC","Step down DC voltage","Convert DC to AC"],ans:2},
+    {q:"In a buck converter, which component stores energy when the switch is ON?",opts:["Diode","Inductor","Capacitor","Resistor"],ans:1},
+    {q:"The output voltage of an ideal buck converter is primarily controlled by:",opts:["Switching frequency","Load resistance","Duty cycle of the switch","Inductor value"],ans:2},
+    {q:"Which of the following is a common application of a buck converter?",opts:["Battery charging in solar systems","Voltage regulation in mobile phone chargers","High-voltage transmission lines","RF signal amplification"],ans:1},
+    {q:"When the switch in a buck converter is turned OFF, the inductor current:",opts:["Immediately drops to zero","Flows through the diode to the load","Reverses direction","Charges the switch"],ans:1},
+    {q:"What is the main function of a boost converter?",opts:["Step down DC voltage","Step up DC voltage","Convert AC to DC","Convert DC to AC"],ans:1},
+    {q:"In a boost converter, energy is stored in which component when the switch is ON?",opts:["Capacitor","Diode","Inductor","Transformer"],ans:2},
+    {q:"The output voltage of an ideal boost converter is controlled by:",opts:["Input voltage","Load resistance","Duty cycle of the switch","Output capacitor value"],ans:2},
+    {q:"Which of the following is a common application of a boost converter?",opts:["Laptop power supply","LED driver circuits","Step-down voltage regulators","Audio amplifiers"],ans:1},
+    {q:"When the switch in a boost converter is turned OFF, the inductor:",opts:["Stops conducting current","Releases stored energy to the load through the diode","Short-circuits the supply","Reverses voltage permanently"],ans:1},
+    {q:"What is the main function of a buck-boost converter?",opts:["Only step up DC voltage","Only step down DC voltage","Either step up or step down DC voltage","Convert AC to DC"],ans:2},
+    {q:"In a basic (inverting) buck-boost converter, the output voltage polarity is:",opts:["Same as input voltage","Opposite to input voltage","Alternating","Zero"],ans:1},
+    {q:"In a buck-boost converter, energy is stored mainly in the:",opts:["Capacitor","Diode","Inductor","Switch"],ans:2},
+    {q:"The output voltage of an ideal buck-boost converter depends mainly on:",opts:["Load resistance","Input voltage only","Duty cycle of the switch","Switching frequency only"],ans:2},
+    {q:"Which of the following is a common application of a buck-boost converter?",opts:["Voltage regulation in battery-powered devices","High-voltage AC transmission","Audio signal processing","RF communication systems"],ans:0},
+    {q:"What is the primary function of a UPS?",opts:["Increase the input voltage","Provide uninterrupted power during outages","Convert AC to DC permanently","Reduce power consumption"],ans:1},
+    {q:"Which component in a UPS stores electrical energy for backup power?",opts:["Transformer","Rectifier","Battery","Inverter"],ans:2},
+    {q:"During a power failure, a UPS supplies power to the load using:",opts:["Rectifier","Bypass switch","Inverter","Surge protector"],ans:2},
+    {q:"Which type of UPS provides zero transfer time between mains failure and backup supply?",opts:["Offline UPS","Line-interactive UPS","Online UPS","Standby UPS"],ans:2},
+    {q:"Which of the following is a common application of a UPS?",opts:["Electric motor speed control","Data centres and computer systems","Street lighting","Radio broadcasting"],ans:1},
+    {q:"What is the primary source of energy in a battery electric vehicle (BEV)?",opts:["Internal combustion engine","Hydrogen fuel cell","Rechargeable battery pack","Alternator"],ans:2},
+    {q:"Which component converts electrical energy from the battery into mechanical energy to drive the wheels?",opts:["DC–DC converter","Electric motor","Inverter","Battery Management System"],ans:1},
+    {q:"What is the main function of the inverter in an electric vehicle?",opts:["Convert AC to DC","Convert DC to AC","Step up battery voltage","Store electrical energy"],ans:1},
+    {q:"Regenerative braking in EVs helps to:",opts:["Increase vehicle speed","Reduce battery life","Recover energy during braking","Replace mechanical brakes completely"],ans:2},
+    {q:"Which of the following is a key advantage of electric vehicles?",opts:["Higher fuel consumption","Zero tailpipe emissions","More engine noise","Frequent oil changes"],ans:1},
+    {q:"In the block diagram of an electric vehicle, which component stores electrical energy?",opts:["Electric motor","Power controller","Battery pack","Inverter"],ans:2},
+    {q:"Which block in an EV converts DC power from the battery into AC power for the motor?",opts:["DC–DC converter","On-board charger","Inverter","Battery Management System"],ans:2},
+    {q:"What is the main function of the DC–DC converter in an EV block diagram?",opts:["Convert AC to DC","Convert DC to AC","Step down high-voltage DC to low-voltage DC","Store electrical energy"],ans:2},
+    {q:"In the EV block diagram, regenerative braking sends recovered energy back to the:",opts:["Electric motor","Battery pack","Inverter only","Charging port"],ans:1},
+    {q:"Which block manages battery safety, state of charge, and temperature in an EV?",opts:["Motor controller","Inverter","Battery Management System (BMS)","Power distribution unit"],ans:2},
+    {q:"Which component is the main source of electrical energy in an electric vehicle?",opts:["Fuel cell","Alternator","Battery pack","Generator"],ans:2},
+    {q:"What is the primary function of the electric motor in an EV?",opts:["Store electrical energy","Convert mechanical energy to electrical energy","Convert electrical energy to mechanical energy","Control battery charging"],ans:2},
+    {q:"Which EV component controls power flow between the battery and the motor?",opts:["Battery Management System","Power electronics controller","On-board charger","DC–DC converter"],ans:1},
+    {q:"Which component is responsible for monitoring battery voltage, current, and temperature?",opts:["Inverter","Motor","Battery Management System (BMS)","Charging port"],ans:2},
+    {q:"The DC–DC converter in an EV is mainly used to:",opts:["Convert DC to AC","Step down high-voltage DC to low-voltage DC","Step up low-voltage DC to high-voltage DC","Charge the traction battery"],ans:1},
+    {q:"Which type of motor is most commonly used in modern electric vehicles?",opts:["DC series motor","Induction motor","Permanent Magnet Synchronous Motor (PMSM)","Universal motor"],ans:2},
+    {q:"Which motor is known for high efficiency and high power density in EV applications?",opts:["Stepper motor","Switched Reluctance Motor","PMSM","DC shunt motor"],ans:2},
+    {q:"Which motor does NOT require permanent magnets?",opts:["PMSM","BLDC motor","Induction motor","PMDC motor"],ans:2},
+    {q:"Which EV motor is well suited for regenerative braking?",opts:["DC motor only","AC induction motor","PMSM","Both B and C"],ans:3},
+    {q:"Which motor is preferred in some EVs due to its simple construction and robustness?",opts:["Switched Reluctance Motor","Universal motor","Synchronous motor","Servo motor"],ans:0}
+  ],
+  5:[
+    {q:"Which quantity in a magnetic circuit is analogous to electric current in an electric circuit?",opts:["Magnetic flux density","Magnetic field intensity","Magnetic flux","Magnetomotive force"],ans:2},
+    {q:"The opposition offered by a magnetic circuit to the establishment of magnetic flux is called:",opts:["Reluctance","Reactance","Resistance","Permeability"],ans:0},
+    {q:"Which of the following materials has the highest magnetic permeability?",opts:["Air","Cast iron","Silicon steel","Copper"],ans:2},
+    {q:"The dot convention in coupled coils is used to indicate:",opts:["The physical location of windings","The polarity of induced voltage","The direction of magnetic flux","The magnitude of mutual inductance"],ans:1},
+    {q:"If current enters the dotted terminal of the primary coil, the induced voltage in the secondary coil will be:",opts:["Positive at the dotted terminal","Negative at the dotted terminal","Zero at the dotted terminal","Independent of dot marking"],ans:0},
+    {q:"Two coils have dots on opposite ends. If currents enter both dotted terminals simultaneously, the mutual inductance will be:",opts:["Zero","Maximum and aiding","Opposing","Independent of current direction"],ans:2},
+    {q:"The working principle of a transformer is based on:",opts:["Self-induction","Mutual induction","Electromagnetic induction","Electrostatic induction"],ans:1},
+    {q:"A transformer that operates at a constant voltage and current rating is known as:",opts:["Power transformer","Distribution transformer","Instrument transformer","Auto-transformer"],ans:0},
+    {q:"Which type of transformer is used to measure high AC currents?",opts:["Potential transformer","Power transformer","Current transformer","Isolation transformer"],ans:2},
+    {q:"A step-up transformer is commonly used in:",opts:["Domestic appliances","Transmission of electrical power","Electric traction","Distribution substations"],ans:1},
+    {q:"The principle of operation of a DC motor is based on:",opts:["Faraday's law of electromagnetic induction","Fleming's right-hand rule","Fleming's left-hand rule","Lenz's law"],ans:2},
+    {q:"Which type of DC motor has high starting torque and is suitable for cranes and hoists?",opts:["Shunt-wound DC motor","Series-wound DC motor","Compound-wound DC motor","Permanent magnet DC motor"],ans:1},
+    {q:"In a shunt DC motor, the speed is:",opts:["Highly variable with load","Nearly constant regardless of load","Zero at no load","Infinite at full load"],ans:1},
+    {q:"What is the main function of a commutator in a DC motor?",opts:["To increase torque","To reverse current direction in the armature","To reduce armature resistance","To control speed"],ans:1},
+    {q:"A compound DC motor combines the characteristics of:",opts:["Series and shunt motors","Series and synchronous motors","Shunt and induction motors","Stepper and synchronous motors"],ans:0},
+    {q:"The working principle of a stepper motor is based on:",opts:["Electromagnetic induction","Magnetic attraction and repulsion of stator and rotor poles","Lorentz force","Faraday's law"],ans:1},
+    {q:"Stepper motors are commonly used when:",opts:["High torque at high speed is required","Precise position control is required","AC power is unavailable","High efficiency is more important than accuracy"],ans:1},
+    {q:"Which type of stepper motor moves in discrete steps without requiring feedback?",opts:["Servo motor","Hybrid stepper motor","Permanent magnet stepper motor","Synchronous motor"],ans:1},
+    {q:"Typical applications of stepper motors include:",opts:["Electric vehicles","CNC machines and 3D printers","Power transmission","High-speed fans"],ans:1},
+    {q:"The step angle of a stepper motor is defined as:",opts:["Torque produced per step","Angle rotated per input pulse","Total rotation in one revolution","Rotor speed at full load"],ans:1},
+    {q:"The primary purpose of a fuse in an electrical circuit is to:",opts:["Regulate voltage","Protect the circuit from overcurrent","Store electrical energy","Convert AC to DC"],ans:1},
+    {q:"A fuse operates on the principle of:",opts:["Electromagnetic induction","Melting of a low melting point conductor due to excessive current","Magnetic attraction","Electrostatic force"],ans:1},
+    {q:"Which type of fuse is used for protecting semiconductor devices like diodes and transistors?",opts:["HRC (High Rupturing Capacity) fuse","Rewireable fuse","Cartridge fuse","Miniature fuse"],ans:0},
+    {q:"What happens when the current exceeds the rated value of a fuse?",opts:["The fuse cools down","The fuse blows or melts, breaking the circuit","The fuse stores excess energy","The fuse regulates the current"],ans:1},
+    {q:"A rewireable fuse is preferred over a cartridge fuse because:",opts:["It is more precise","It is cheaper and can be reused after replacing the wire","It has higher breaking capacity","It works for AC and DC circuits"],ans:1},
+    {q:"The primary purpose of an MCB in an electrical circuit is to:",opts:["Store electrical energy","Protect the circuit from overcurrent and short circuits","Step up voltage","Convert AC to DC"],ans:1},
+    {q:"The two main protection mechanisms used in an MCB are:",opts:["Thermal and magnetic","Mechanical and hydraulic","Capacitive and inductive","Optical and thermal"],ans:0},
+    {q:"Which type of MCB trips instantly under high short-circuit current?",opts:["Type B","Type C","Type D","All of the above"],ans:2},
+    {q:"Compared to a fuse, an MCB has the advantage of:",opts:["One-time use only","Automatic resetting after a trip","Can be manually reset without replacement","Slower response to overcurrent"],ans:2},
+    {q:"In domestic wiring, the typical rated current for an MCB is:",opts:["1–5 A","6–32 A","50–100 A","200–500 A"],ans:1},
+    {q:"The main purpose of electrical earthing is to:",opts:["Increase circuit voltage","Protect human life and equipment from electric shocks","Improve power factor","Reduce energy consumption"],ans:1},
+    {q:"The point of a system which is connected to the earth is called:",opts:["Neutral point","Live point","Phase point","Load point"],ans:0},
+    {q:"Which type of earthing is commonly used in residential buildings?",opts:["Plate earthing","Rod earthing","Pipe earthing","Strip earthing"],ans:2},
+    {q:"Earth resistance should ideally be:",opts:["High to prevent current flow","Low to allow fault current to pass easily","Infinite","Equal to load resistance"],ans:1},
+    {q:"Which type of earthing uses a copper plate buried in the ground?",opts:["Rod earthing","Plate earthing","Strip earthing","Pipe earthing"],ans:1},
+    {q:"The difference between neutral and earth is:",opts:["Neutral carries current in normal operation, earth carries current only in fault","Earth is always at higher potential than neutral","Neutral is connected to metallic body, earth is not","Neutral is optional in a circuit"],ans:0},
+    {q:"Strip earthing consists of:",opts:["Copper rod buried vertically","Copper strip buried horizontally in the ground","Galvanized iron pipe","Metallic plate in water"],ans:1},
+    {q:"What is the main reason for connecting neutral to earth at the transformer?",opts:["To stabilize voltage during fault","To increase current flow","To reduce energy consumption","To eliminate the need for MCBs"],ans:0},
+    {q:"Which type of earthing is preferred in high-rise buildings?",opts:["Rod earthing","Plate earthing","Strip earthing","Pipe earthing"],ans:2},
+    {q:"When a fault occurs and the live wire touches the metallic body, the purpose of earthing is to:",opts:["Reduce the current","Provide a low-resistance path for fault current to flow to the ground","Increase voltage in the system","Disconnect the neutral"],ans:1}
+  ]
+};
+
+// State
+let studentName='',selectedUnit=1,questions=[],currentQ=0,answers=[],timer=null,timeLeft=1800;
+
+// Build unit grid
+const unitGrid=document.getElementById('unitGrid');
+UNITS.forEach(u=>{
+  const btn=document.createElement('button');
+  btn.className='unit-btn'+(u.id===1?' selected':'');
+  btn.onclick=()=>{
+    selectedUnit=u.id;
+    document.querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+  };
+  btn.innerHTML=`<div class="unit-label">Unit ${u.id}</div><div class="unit-name">${u.name}</div><div class="unit-count">${ALL_QUESTIONS[u.id].length} Questions</div>`;
+  unitGrid.appendChild(btn);
+});
+
+function startQuiz(){
+  studentName=document.getElementById('studentName').value.trim();
+  if(!studentName){alert('Please enter your name to begin!');return;}
+  questions=ALL_QUESTIONS[selectedUnit];
+  answers=new Array(questions.length).fill(null);
+  currentQ=0;timeLeft=1800;
+  document.getElementById('displayName').textContent=studentName;
+  showScreen('quiz');
+  renderQuestion();
+  startTimer();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';});
+  const s=document.getElementById(id);s.classList.add('active');s.style.display='flex';
+}
+
+function startTimer(){
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    timeLeft--;
+    updateTimer();
+    if(timeLeft<=0){clearInterval(timer);submitQuiz();}
+  },1000);
+}
+
+function updateTimer(){
+  const m=Math.floor(timeLeft/60),s=timeLeft%60;
+  document.getElementById('timerDisplay').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const pill=document.getElementById('timerPill');
+  if(timeLeft<=300){pill.classList.add('warning');}else{pill.classList.remove('warning');}
+}
+
+function renderQuestion(){
+  const q=questions[currentQ];
+  const total=questions.length;
+  const pct=Math.round((currentQ/total)*100);
+  document.getElementById('progressLabel').textContent=`Question ${currentQ+1} of ${total}`;
+  document.getElementById('progressPct').textContent=pct+'%';
+  document.getElementById('progressFill').style.width=pct+'%';
+  const unitObj=UNITS.find(u=>u.id===selectedUnit);
+  document.getElementById('qUnitTag').textContent=`⚡ Unit ${selectedUnit} · ${unitObj.name}`;
+  document.getElementById('qNum').textContent=`Question ${currentQ+1}`;
+  document.getElementById('qText').textContent=q.q;
+
+  const opts=document.getElementById('optionsContainer');
+  opts.innerHTML='';
+  const letters=['A','B','C','D'];
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='option';
+    btn.innerHTML=`<span class="opt-letter">${letters[i]}</span><span class="opt-text">${opt}</span>`;
+    if(answers[currentQ]!==null){
+      btn.disabled=true;btn.classList.add('disabled');
+      if(i===q.ans)btn.classList.add('correct');
+      else if(i===answers[currentQ])btn.classList.add('wrong');
+    } else {
+      btn.onclick=()=>selectAnswer(i);
+    }
+    opts.appendChild(btn);
+  });
+
+  // Show feedback if already answered
+  const fb=document.getElementById('feedbackMsg');
+  fb.className='feedback-msg';
+  if(answers[currentQ]!==null){
+    if(answers[currentQ]===q.ans){
+      fb.className='feedback-msg show correct';
+      fb.innerHTML='✅ Correct! Well done.';
+    } else {
+      fb.className='feedback-msg show wrong';
+      fb.innerHTML=`❌ Wrong! Correct answer: <strong style="margin-left:4px">${q.opts[q.ans]}</strong>`;
+    }
+  }
+
+  // Next/Submit button
+  const btnNext=document.getElementById('btnNext');
+  if(currentQ===total-1){
+    btnNext.textContent='Submit Quiz';
+    btnNext.className='btn-nav btn-submit-quiz';
+    btnNext.onclick=submitQuiz;
+  } else {
+    btnNext.textContent='Next →';
+    btnNext.className='btn-nav btn-next';
+    btnNext.onclick=nextQuestion;
+  }
+}
+
+function selectAnswer(idx){
+  if(answers[currentQ]!==null)return;
+  answers[currentQ]=idx;
+  const q=questions[currentQ];
+  const opts=document.querySelectorAll('.option');
+  opts.forEach((btn,i)=>{
+    btn.disabled=true;btn.classList.add('disabled');
+    if(i===q.ans)btn.classList.add('correct');
+    else if(i===idx)btn.classList.add('wrong');
+  });
+  const fb=document.getElementById('feedbackMsg');
+  if(idx===q.ans){
+    fb.className='feedback-msg show correct';
+    fb.innerHTML='✅ Correct! Well done.';
+  } else {
+    fb.className='feedback-msg show wrong';
+    fb.innerHTML=`❌ Wrong! Correct answer: <strong style="margin-left:4px">${q.opts[q.ans]}</strong>`;
+  }
+}
+
+function nextQuestion(){if(currentQ<questions.length-1){currentQ++;renderQuestion();window.scrollTo(0,0);}}
+function prevQuestion(){if(currentQ>0){currentQ--;renderQuestion();window.scrollTo(0,0);}}
+
+function submitQuiz(){
+  clearInterval(timer);
+  const correct=answers.filter((a,i)=>a===questions[i].ans).length;
+  const wrong=answers.filter((a,i)=>a!==null&&a!==questions[i].ans).length;
+  const skipped=answers.filter(a=>a===null).length;
+  const pct=Math.round((correct/questions.length)*100);
+  const unitObj=UNITS.find(u=>u.id===selectedUnit);
+
+  document.getElementById('resultsName').textContent=studentName;
+  document.getElementById('resultsUnit').textContent=`Unit ${selectedUnit}: ${unitObj.name}`;
+  document.getElementById('statCorrect').textContent=correct;
+  document.getElementById('statWrong').textContent=wrong;
+  document.getElementById('statSkipped').textContent=skipped;
+  document.getElementById('scorePct').textContent=pct+'%';
+
+  // Animate ring
+  const circ=314;
+  const offset=circ-(circ*pct/100);
+  document.getElementById('scoreArc').style.strokeDashoffset=offset;
+
+  let grade,cls;
+  if(pct>=80){grade='Grade A — Excellent!';cls='grade-A';}
+  else if(pct>=60){grade='Grade B — Good';cls='grade-B';}
+  else if(pct>=40){grade='Grade C — Average';cls='grade-C';}
+  else{grade='Grade D — Needs Improvement';cls='grade-D';}
+  const gb=document.getElementById('gradeBadge');gb.textContent=grade;gb.className='grade-badge '+cls;
+
+  showScreen('results');
+}
+
+function showReview(){
+  const reviewList=document.getElementById('reviewList');
+  reviewList.innerHTML='';
+  const unitObj=UNITS.find(u=>u.id===selectedUnit);
+  document.getElementById('reviewMeta').textContent=`Unit ${selectedUnit} · ${questions.length} Qs`;
+  const letters=['A','B','C','D'];
+  questions.forEach((q,i)=>{
+    const userAns=answers[i];
+    const isCorrect=userAns===q.ans;
+    const isSkipped=userAns===null;
+    const item=document.createElement('div');
+    item.className='review-item '+(isSkipped?'r-skip':isCorrect?'r-correct':'r-wrong');
+    let statusHtml=isSkipped?'<span class="review-status rs-skip">⏭ Skipped</span>':isCorrect?'<span class="review-status rs-correct">✓ Correct</span>':'<span class="review-status rs-wrong">✗ Wrong</span>';
+    let optsHtml='';
+    q.opts.forEach((opt,j)=>{
+      let cls='review-opt';
+      let tick='';
+      if(j===q.ans){cls+=' r-correct-opt';tick='✓';}
+      else if(j===userAns&&!isCorrect){cls+=' r-wrong-opt';tick='✗';}
+      optsHtml+=`<div class="${cls}"><span class="r-tick">${tick||'·'}</span><strong>${letters[j]}.</strong> ${opt}</div>`;
+    });
+    item.innerHTML=`<div class="review-qnum">Q${i+1}</div>${statusHtml}<div class="review-qtxt">${q.q}</div><div class="review-opts">${optsHtml}</div>`;
+    reviewList.appendChild(item);
+  });
+  showScreen('review');
+  window.scrollTo(0,0);
+}
+
+function showResults(){showScreen('results');}
+function retakeQuiz(){answers=new Array(questions.length).fill(null);currentQ=0;timeLeft=1800;showScreen('quiz');renderQuestion();startTimer();}
+function goHome(){clearInterval(timer);document.getElementById('studentName').value='';showScreen('landing');}
+</script>
+</body>
+</html>
